@@ -1,0 +1,33 @@
+# Render blueprint (EU / Frankfurt). Staging and production are two copies of this blueprint
+# (D12). Data-residency and DPIA sign-off must be recorded before any real HR data is imported.
+#
+# ONE MANUAL STEP per database: create the roles mh_owner (migrations) and mh_app (runtime),
+# as in db/bootstrap.sql but WITH GENERATED PASSWORDS, then set the three URLs below as
+# secrets. The runtime role must not own tables, be superuser, or have BYPASSRLS (INV-1.4).
+services:
+  - type: web
+    name: mentors-hub-web
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npm run db:migrate   # a failing migration aborts the release (INV-8)
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars: &env
+      - { key: NODE_VERSION, value: "22" }
+      - { key: DATABASE_URL, sync: false }
+      - { key: MIGRATION_DATABASE_URL, sync: false }
+      - { key: APP_BASE_URL, sync: false }
+      - { key: SESSION_SECRET, generateValue: true }
+      - { key: MAIL_FROM, sync: false }
+      - { key: SMTP_URL, sync: false }
+      - { key: DEFAULT_TIME_ZONE, value: Asia/Baku }
+  - type: worker
+    name: mentors-hub-worker
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: npm ci
+    startCommand: npm run worker
+    envVars: *env

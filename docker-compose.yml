@@ -1,0 +1,20 @@
+# Local development services: PostgreSQL 16 and Mailpit (catches all outgoing mail, incl. calendar invites).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/bootstrap.sql:/docker-entrypoint-initdb.d/10-bootstrap.sql:ro
+      - ./db/docker-init.sh:/docker-entrypoint-initdb.d/20-database.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+  mailpit:
+    image: axllent/mailpit
+    ports: ["1025:1025", "8025:8025"]   # SMTP and web UI
+volumes:
+  dbdata:

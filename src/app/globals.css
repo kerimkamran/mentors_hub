@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/*
+ * Theme: light by default, dark when the person chose it (data-theme="dark") or when they follow their device
+ * (no data-theme="light") and the device prefers dark. Token values mirror src/lib/theme-tokens.ts (tested).
+ * Tailwind's `dark:` variant follows the same rule so existing classes switch with the theme.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"], [data-theme="light"] *, [data-theme="dark"], [data-theme="dark"] *)) { @slot; }
+  }
+}
+
+:root {
+  --bg: #ffffff; --fg: #111827; --muted: #4b5563; --surface: #f3f4f6; --border: #6b7280;
+  --accent: #111827; --accent-fg: #ffffff; --link: #1d4ed8;
+  --ok: #166534; --warn: #92400e; --bad: #b91c1c;
+  --banner-bg: #e0f2fe; --banner-fg: #0c4a6e; --focus: #1d4ed8;
+  --row-pad: 0.75rem; --row-font: 1rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1020; --fg: #e5e7eb; --muted: #9ca3af; --surface: #151b2e; --border: #7b8497;
+    --accent: #e5e7eb; --accent-fg: #0b1020; --link: #93c5fd;
+    --ok: #86efac; --warn: #fcd34d; --bad: #fca5a5;
+    --banner-bg: #172554; --banner-fg: #dbeafe; --focus: #93c5fd;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1020; --fg: #e5e7eb; --muted: #9ca3af; --surface: #151b2e; --border: #7b8497;
+  --accent: #e5e7eb; --accent-fg: #0b1020; --link: #93c5fd;
+  --ok: #86efac; --warn: #fcd34d; --bad: #fca5a5;
+  --banner-bg: #172554; --banner-fg: #dbeafe; --focus: #93c5fd;
+  color-scheme: dark;
+}
+:root[data-density="dense"] { --row-pad: 0.25rem; --row-font: 0.875rem; }
+
+body { background: var(--bg); color: var(--fg); overflow-wrap: anywhere; }
+a { color: var(--link); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Announcement banner (conveyed by an icon and text, not colour alone). */
+.mh-banner { background: var(--banner-bg); color: var(--banner-fg); border: 1px solid var(--border); }
+
+/* Status badges: icon + text, colour only reinforces. */
+.mh-status { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; }
+.mh-status[data-tone="ok"] { color: var(--ok); }
+.mh-status[data-tone="warn"] { color: var(--warn); }
+.mh-status[data-tone="bad"] { color: var(--bad); }
+.mh-status[data-tone="info"] { color: var(--muted); }
+
+/* Data tables: sortable, dense-capable, and reflowed into labelled cards on narrow screens (A3, A8). */
+.mh-table { width: 100%; border-collapse: collapse; font-size: var(--row-font); }
+.mh-table th, .mh-table td { text-align: start; padding: var(--row-pad) 0.5rem; border-top: 1px solid var(--border); vertical-align: top; }
+.mh-table thead th { position: sticky; top: 0; background: var(--bg); border-top: 0; border-bottom: 2px solid var(--border); z-index: 1; }
+.mh-table [data-cell]:focus-visible { outline-offset: -2px; }
+.mh-table-wrap { overflow-x: auto; max-width: 100%; }
+@media (max-width: 40rem) {
+  .mh-table-wrap { overflow-x: visible; }
+  .mh-table, .mh-table tbody, .mh-table tr, .mh-table td { display: block; width: 100%; }
+  .mh-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .mh-table tr { border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 0.75rem; padding: 0.25rem 0.5rem; background: var(--surface); }
+  .mh-table td { border-top: 0; display: flex; gap: 0.75rem; justify-content: space-between; text-align: end; }
+  .mh-table td::before { content: attr(data-label); font-weight: 600; text-align: start; color: var(--muted); }
+}
