@@ -4,6 +4,9 @@
  * Never run against production: it refuses unless DEMO_SEED=1 (staging/local only).
  */
 import pg from "pg";
+import { applyDerivedEnv } from "../src/lib/derive-env";
+
+applyDerivedEnv();
 
 if (process.env.DEMO_SEED !== "1") {
   console.error("refusing to seed: set DEMO_SEED=1 (staging/local only, synthetic data)");
@@ -23,6 +26,10 @@ const PEOPLE: { email: string; name: string; dept: string; roles?: string[] }[] 
   { email: "mentee2@demo-telecom.example", name: "Gunel Qasimova", dept: "Marketing" },
 ];
 
+// Optional: make one real person an organisation admin of the demo organisation (staging convenience).
+const extraAdmin = process.env.DEMO_ADMIN_EMAIL?.trim().toLowerCase();
+if (extraAdmin && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(extraAdmin)) PEOPLE.push({ email: extraAdmin, name: "Demo Administrator", dept: "IT", roles: ["org_admin"] });
+
 const c = new pg.Client({ connectionString: url });
 await c.connect();
 try {
@@ -33,6 +40,8 @@ try {
   );
   const orgId = org.rows[0]!.id;
   await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ('demo-telecom.example', $1) ON CONFLICT DO NOTHING", [orgId]);
+  if (extraAdmin && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(extraAdmin))
+    await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [extraAdmin.split("@")[1], orgId]);
   await c.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
   for (const p of PEOPLE) {
     const i = await c.query<{ id: string }>(

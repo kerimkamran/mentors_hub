@@ -8,6 +8,12 @@ import type { SignInMail } from "../../src/lib/jobs";
 export const mailSignIn: Task = async (payload, helpers) => {
   const m = payload as SignInMail;
   const msg = renderSignInEmail(m);
+  // STAGING ONLY (synthetic demo organisation): no mail server is connected yet, so the sign-in link and code
+  // go to the private worker log instead. Refuses to act unless the demo seed flag is also set (INV-8).
+  if (process.env.STAGING_MAIL_LOG === "1" && process.env.DEMO_SEED === "1") {
+    helpers.logger.warn(`STAGING sign-in for ${m.to}: code ${m.code} link ${msg.link}`);
+    return;
+  }
   await createTransport().sendMail({ from: env().MAIL_FROM, to: m.to, subject: msg.subject, text: msg.text, html: msg.html });
   helpers.logger.info("mail.signin sent");
 };

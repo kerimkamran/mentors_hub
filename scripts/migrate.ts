@@ -13,6 +13,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { runMigrations } from "graphile-worker";
+import { applyDerivedEnv } from "../src/lib/derive-env";
 
 const defaultDir = join(dirname(fileURLToPath(import.meta.url)), "..", "db", "migrations");
 
@@ -80,6 +81,7 @@ export async function migrate(
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  applyDerivedEnv();
   const url = process.env.MIGRATION_DATABASE_URL;
   if (!url) {
     console.error("[ENV-001] MIGRATION_DATABASE_URL is required");

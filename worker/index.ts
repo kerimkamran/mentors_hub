@@ -13,18 +13,18 @@ import { mailSend } from "./tasks/mail-send";
 import { notifyFire } from "./tasks/notify-fire";
 import { opsPurge } from "./tasks/ops-purge";
 
-/** Recurring jobs (graphile-worker crontab): S2 raw import rows daily 03:10 UTC (C-104); S3 operational history daily 03:17 UTC (C-161, C-162). */
-export const crontab = ["10 3 * * * import.purge", "17 3 * * * ops.purge"].join("\n");
+/** Recurring jobs (graphile-worker crontab; task names in a crontab may not contain dots): S2 raw import rows daily 03:10 UTC (C-104); S3 operational history daily 03:17 UTC (C-161, C-162). */
+export const crontab = ["10 3 * * * import_purge", "17 3 * * * ops_purge"].join("\n");
 
 export const taskList = {
   "health.ping": healthPing,
   "mail.signin": mailSignIn,
-  "import.purge": importPurge,
+  import_purge: importPurge,
   // S3 notifications and operations: wrapped so job_run keeps a summary (queue, status, attempts, error code) per job.
   "mail.send": withJobRun(mailSend),
   "notify.fire": withJobRun(notifyFire),
   "announcement.notify": withJobRun(announcementNotify),
-  "ops.purge": opsPurge,
+  ops_purge: opsPurge,
 };
 
 async function main() {

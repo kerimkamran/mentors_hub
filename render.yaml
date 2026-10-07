@@ -1,33 +1,61 @@
-# Render blueprint (EU / Frankfurt). Staging and production are two copies of this blueprint
-# (D12). Data-residency and DPIA sign-off must be recorded before any real HR data is imported.
-#
-# ONE MANUAL STEP per database: create the roles mh_owner (migrations) and mh_app (runtime),
-# as in db/bootstrap.sql but WITH GENERATED PASSWORDS, then set the three URLs below as
-# secrets. The runtime role must not own tables, be superuser, or have BYPASSRLS (INV-1.4).
+# Render blueprint (EU / Frankfurt), STAGING. Creates the database, the web service and the worker with
+# NO manual steps: database roles, passwords, migrations and the synthetic demo organisation are created
+# by the pre-deploy step. Only one value is asked for at creation: DEMO_ADMIN_EMAIL (who may sign in as admin).
+# Data-residency and DPIA sign-off must be recorded before any real HR data is imported (Plan D12).
+# Production is a separate copy of this blueprint without DEMO_SEED / STAGING_MAIL_LOG.
+
+databases:
+  - name: mentors-hub-db
+    region: frankfurt
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+    databaseName: mentors_hub
+    user: mh_admin
+    ipAllowList: []   # internal access only; nothing outside Render can connect
+
+envVarGroups:
+  - name: mentors-hub-shared
+    envVars:
+      - { key: NODE_VERSION, value: "22" }
+      - { key: OWNER_PASSWORD, generateValue: true }
+      - { key: APP_PASSWORD, generateValue: true }
+      - { key: SESSION_SECRET, generateValue: true }
+      # If Render shows a different address for the web service, change APP_BASE_URL here (links in emails use it).
+      - { key: APP_BASE_URL, value: "https://azerconnect-mentors-hub.onrender.com" }
+      - { key: MAIL_FROM, value: "Mentorship Hub <no-reply@azerconnect.az>" }
+      - { key: SMTP_URL, value: "smtp://mail.invalid:25" }   # no mail server yet (see STAGING_MAIL_LOG)
+      - { key: DEFAULT_TIME_ZONE, value: Asia/Baku }
+      # STAGING ONLY, synthetic data: demo organisation + sign-in links written to the private worker log.
+      - { key: DEMO_SEED, value: "1" }
+      - { key: STAGING_MAIL_LOG, value: "1" }
+
 services:
   - type: web
-    name: mentors-hub-web
+    name: azerconnect-mentors-hub
     runtime: node
     region: frankfurt
     plan: starter
     buildCommand: npm ci && npm run build
-    preDeployCommand: npm run db:migrate   # a failing migration aborts the release (INV-8)
+    # Order matters: roles first, then schema, then demo data. Any failure aborts the release and the old version keeps running (INV-8).
+    preDeployCommand: npm run db:prepare && npm run db:migrate && if [ "$DEMO_SEED" = "1" ]; then npm run seed:demo; fi
     startCommand: npm start
     healthCheckPath: /api/health
-    envVars: &env
-      - { key: NODE_VERSION, value: "22" }
-      - { key: DATABASE_URL, sync: false }
-      - { key: MIGRATION_DATABASE_URL, sync: false }
-      - { key: APP_BASE_URL, sync: false }
-      - { key: SESSION_SECRET, generateValue: true }
-      - { key: MAIL_FROM, sync: false }
-      - { key: SMTP_URL, sync: false }
-      - { key: DEFAULT_TIME_ZONE, value: Asia/Baku }
+    envVars:
+      - fromGroup: mentors-hub-shared
+      - { key: DB_HOST, fromDatabase: { name: mentors-hub-db, property: host } }
+      - { key: DB_PORT, fromDatabase: { name: mentors-hub-db, property: port } }
+      - { key: DB_NAME, fromDatabase: { name: mentors-hub-db, property: database } }
+      - { key: ADMIN_DATABASE_URL, fromDatabase: { name: mentors-hub-db, property: connectionString } }
+      - { key: DEMO_ADMIN_EMAIL, sync: false }
   - type: worker
-    name: mentors-hub-worker
+    name: azerconnect-mentors-hub-worker
     runtime: node
     region: frankfurt
     plan: starter
     buildCommand: npm ci
     startCommand: npm run worker
-    envVars: *env
+    envVars:
+      - fromGroup: mentors-hub-shared
+      - { key: DB_HOST, fromDatabase: { name: mentors-hub-db, property: host } }
+      - { key: DB_PORT, fromDatabase: { name: mentors-hub-db, property: port } }
+      - { key: DB_NAME, fromDatabase: { name: mentors-hub-db, property: database } }

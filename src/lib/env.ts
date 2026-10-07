@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { deriveEnv } from "./derive-env";
 
 /**
  * Environment contract (INV-8 fail closed, T-INV8-02).
@@ -26,7 +27,7 @@ export class EnvError extends Error {
 
 /** Parse the environment. Reports variable NAMES only — never values (secrets stay out of logs). */
 export function parseEnv(source: Record<string, string | undefined>): Env {
-  const result = schema.safeParse(source);
+  const result = schema.safeParse(deriveEnv(source));
   if (!result.success) {
     const problems = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
     throw new EnvError(problems);

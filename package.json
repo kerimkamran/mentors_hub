@@ -9,6 +9,7 @@
     "lint": "eslint . && tsx scripts/lint-migrations.ts",
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:prepare": "tsx scripts/render-prepare.ts",
     "db:reset": "tsx scripts/reset-db.ts",
     "worker": "tsx worker/index.ts",
     "test": "vitest run",
