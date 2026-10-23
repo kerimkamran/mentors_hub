@@ -29,6 +29,13 @@ export const core = defineMessages(
     "verify.title": "Continue to Mentorship Hub",
     "verify.intro": "Press Continue to finish signing in.",
     "verify.continue": "Continue",
+    "invite.title": "Welcome to Mentorship Hub",
+    "invite.intro": "You have been invited. Press Continue to sign in.",
+    "invite.continue": "Continue",
+    "invite.invalid.title": "This invitation cannot be used",
+    "invite.invalid.body": "It may have expired or already been used. Ask your administrator for a new invitation link.",
+    "invite.to_signin": "Go to sign in",
+
     "verify.invalid.title": "This link cannot be used",
     "verify.invalid.body": "It may have expired, been used, or been opened in a different browser than the one you requested it in. Request a new link, or enter the code in the original browser.",
 
@@ -90,6 +97,13 @@ export const core = defineMessages(
     "verify.title": "Mentorluq Mərkəzinə davam edin",
     "verify.intro": "Daxil olmağı tamamlamaq üçün «Davam et» düyməsinə basın.",
     "verify.continue": "Davam et",
+    "invite.title": "Mentorluq Mərkəzinə xoş gəlmisiniz",
+    "invite.intro": "Siz dəvət olunmusunuz. Daxil olmaq üçün «Davam et» düyməsinə basın.",
+    "invite.continue": "Davam et",
+    "invite.invalid.title": "Bu dəvətdən istifadə etmək mümkün deyil",
+    "invite.invalid.body": "Müddəti bitmiş və ya artıq istifadə edilmiş ola bilər. Administratordan yeni dəvət keçidi istəyin.",
+    "invite.to_signin": "Daxil olma səhifəsinə keç",
+
     "verify.invalid.title": "Bu keçiddən istifadə etmək mümkün deyil",
     "verify.invalid.body": "Keçidin müddəti bitmiş, istifadə edilmiş və ya sorğunu verdiyiniz brauzerdən fərqli brauzerdə açılmış ola bilər. Yeni keçid sorğulayın və ya kodu ilkin brauzerdə daxil edin.",
 
@@ -151,6 +165,13 @@ export const core = defineMessages(
     "verify.title": "Продолжить в Центре наставничества",
     "verify.intro": "Нажмите «Продолжить», чтобы завершить вход.",
     "verify.continue": "Продолжить",
+    "invite.title": "Добро пожаловать в Центр наставничества",
+    "invite.intro": "Вас пригласили. Нажмите «Продолжить», чтобы войти.",
+    "invite.continue": "Продолжить",
+    "invite.invalid.title": "Это приглашение недействительно",
+    "invite.invalid.body": "Срок его действия мог истечь, или оно уже использовано. Попросите администратора прислать новую ссылку-приглашение.",
+    "invite.to_signin": "Перейти ко входу",
+
     "verify.invalid.title": "Эта ссылка недействительна",
     "verify.invalid.body": "Срок её действия мог истечь, она могла быть уже использована или открыта в другом браузере, чем тот, в котором вы её запрашивали. Запросите новую ссылку или введите код в исходном браузере.",
 

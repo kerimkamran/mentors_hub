@@ -15,4 +15,5 @@ export const peoplePermissions: PermissionMap = {
   "people.record.view": { org_admin: "org", pm: "scope" },
   "people.hr.view": { org_admin: "org" }, // grade bucket and reporting line, never shown to PM in the directory (AC-ADM-22.2)
   "people.deactivate": { org_admin: "org" },
+  "people.invite": { org_admin: "org" }, // add a person and issue a single-use sign-in link (invite-only access)
 };

@@ -177,7 +177,7 @@ export async function completeWithCode(code: string, browserId: string, deps: Au
   return null;
 }
 
-async function createSession(identityId: string, organisationId: string, deps: AuthDeps): Promise<Completed | null> {
+export async function createSession(identityId: string, organisationId: string, deps: AuthDeps): Promise<Completed | null> {
   const member = await withOrg(organisationId, (tx) =>
     tx.query<{ id: string }>("SELECT id FROM membership WHERE identity_id = $1 AND status = 'active'", [identityId]),
   );

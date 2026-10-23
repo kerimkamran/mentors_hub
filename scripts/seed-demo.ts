@@ -4,6 +4,7 @@
  * Never run against production: it refuses unless DEMO_SEED=1 (staging/local only).
  */
 import pg from "pg";
+import { randomToken, sha256Hex } from "../src/lib/crypto";
 import { applyDerivedEnv } from "../src/lib/derive-env";
 
 applyDerivedEnv();
@@ -43,6 +44,7 @@ try {
   if (extraAdmin && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(extraAdmin))
     await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [extraAdmin.split("@")[1], orgId]);
   await c.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
+  let bootstrap: { identityId: string; membershipId: string } | null = null;
   for (const p of PEOPLE) {
     const i = await c.query<{ id: string }>(
       "INSERT INTO identity (email) VALUES ($1) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id",
@@ -58,11 +60,25 @@ try {
        ON CONFLICT (membership_id) DO UPDATE SET display_name = EXCLUDED.display_name`,
       [m.rows[0]!.id, orgId, p.name, p.dept],
     );
+    if (p.email === extraAdmin) bootstrap = { identityId: i.rows[0]!.id, membershipId: m.rows[0]!.id };
     for (const role of p.roles ?? [])
       await c.query(
         `INSERT INTO role_grant (organisation_id, membership_id, role, scope_type) VALUES ($1, $2, $3, 'org') ON CONFLICT DO NOTHING`,
         [orgId, m.rows[0]!.id, role],
       );
+  }
+  // Invite-only access: the bootstrap administrator gets a single-use invite link, printed to the log (staging only).
+  // Each start voids the previous unused link and prints a fresh one, so access can always be recovered from the log.
+  if (bootstrap) {
+    const token = randomToken();
+    await c.query("UPDATE invite_link SET used_at = now() WHERE membership_id = $1 AND used_at IS NULL", [bootstrap.membershipId]);
+    await c.query(
+      `INSERT INTO invite_link (organisation_id, identity_id, membership_id, token_hash, expires_at)
+       VALUES ($1, $2, $3, $4, now() + interval '7 days')`,
+      [orgId, bootstrap.identityId, bootstrap.membershipId, sha256Hex(token)],
+    );
+    const base = (process.env.APP_BASE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+    console.log(`STAGING invite link for ${extraAdmin}: ${base}/auth/invite?t=${token}`);
   }
   await c.query("COMMIT");
   console.log(`seeded Demo Telecom (${PEOPLE.length} synthetic people); sign in with admin@demo-telecom.example`);

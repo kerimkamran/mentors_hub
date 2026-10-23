@@ -15,6 +15,7 @@ export const GLOBAL_TABLES = new Set([
   "organisation_domain",
   "identity",
   "login_challenge",
+  "invite_link",
   "web_session",
   "auth_rate_limit",
 ]);

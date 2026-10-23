@@ -5,7 +5,8 @@ import { Button, Heading } from "@/components/ui";
 import { MEMBERSHIP_STATUSES, parseFilters, PARTICIPATION_STATUSES, searchDirectory } from "@/domain/people/directory";
 import { requireActor } from "@/lib/auth/http";
 import { t } from "@/lib/i18n";
-import { NotFoundError } from "@/lib/permissions";
+import { can, NotFoundError } from "@/lib/permissions";
+import { InviteForm } from "./InviteForm";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,13 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   return (
     <Shell wide>
       <Heading>{t(l, "people.directory.title")}</Heading>
+      {can(actor, "people.invite") && (
+        <InviteForm labels={{
+          title: t(l, "people.invite.title"), intro: t(l, "people.invite.intro"), name: t(l, "people.invite.name"),
+          email: t(l, "people.invite.email"), submit: t(l, "people.invite.submit"), linkTitle: t(l, "people.invite.link_title"),
+          linkHint: t(l, "people.invite.link_hint"), linkLabel: t(l, "people.invite.link_label"),
+        }} />
+      )}
       <form method="get" className="mt-4 flex flex-wrap items-end gap-3" role="search">
         <div className="flex min-w-60 flex-1 flex-col gap-1">
           <label htmlFor="q" className="font-medium">{t(l, data.canSeeHr ? "people.directory.search.hr" : "people.directory.search")}</label>
