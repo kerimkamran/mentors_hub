@@ -126,8 +126,11 @@ export const people = defineMessages(
     "people.error_file.reason_code": "Reason code",
     "people.error_file.reason": "Reason",
 
-    "people.invite.title": "Invite someone",
-    "people.invite.intro": "Add a person and get a one-time link to send them. Opening the link signs them in; it works once and expires after 7 days.",
+    "people.invite.title": "Add a person or reset a password",
+    "people.invite.intro": "Enter the email and, if you want, an initial password: the person can then sign in straight away. You also get a one-time link to copy or send; it lets the person choose their own password. The link works once and expires after 7 days. For someone who already has access, this sets a new password and signs out their other sessions. Only addresses on your organisation's allowed domains can be added.",
+    "people.invite.password": "Initial password (optional)",
+    "people.invite.password_hint": "At least 12 characters. Leave empty to send only the link. Tell the person the password in person or by phone, not in a shared channel.",
+    "people.invite.password_set": "Password set. The person can sign in with the email and password for",
     "people.invite.name": "Full name",
     "people.invite.email": "Work email",
     "people.invite.submit": "Create invite link",
@@ -137,6 +140,7 @@ export const people = defineMessages(
     "people.invite.error.invalid_email": "That email address is not valid.",
     "people.invite.error.invalid_name": "Enter the person's name (up to 200 characters).",
     "people.invite.error.inactive": "This person has been deactivated and cannot be invited.",
+    "people.invite.error.domain_not_allowed": "This email domain is not allowed for your organisation.",
 
     // ---- directory
     "people.directory.title": "People directory",
@@ -324,8 +328,11 @@ export const people = defineMessages(
     "people.error_file.reason_code": "Səbəb kodu",
     "people.error_file.reason": "Səbəb",
 
-    "people.invite.title": "Dəvət et",
-    "people.invite.intro": "Şəxsi əlavə edin və ona göndərmək üçün birdəfəlik keçid əldə edin. Keçidi açmaq şəxsi sistemə daxil edir; keçid bir dəfə işləyir və 7 gündən sonra bitir.",
+    "people.invite.title": "Şəxs əlavə et və ya parolu sıfırla",
+    "people.invite.intro": "E-poçtu və istəyirsinizsə ilkin parolu daxil edin: şəxs dərhal daxil ola bilər. Həmçinin kopyalamaq və ya göndərmək üçün birdəfəlik keçid alırsınız; o, şəxsə öz parolunu seçməyə imkan verir. Keçid bir dəfə işləyir və 7 gündən sonra bitir. Artıq girişi olan şəxs üçün bu, yeni parol təyin edir və digər sessiyalarını bağlayır. Yalnız təşkilatınızın icazə verilən domenlərindəki ünvanlar əlavə oluna bilər.",
+    "people.invite.password": "İlkin parol (könüllü)",
+    "people.invite.password_hint": "Ən azı 12 simvol. Yalnız keçid göndərmək üçün boş buraxın. Parolu şəxsə üzbəüz və ya telefonla bildirin, ümumi kanalda yox.",
+    "people.invite.password_set": "Parol təyin edildi. Şəxs bu e-poçt və parolla daxil ola bilər:",
     "people.invite.name": "Ad və soyad",
     "people.invite.email": "İş e-poçtu",
     "people.invite.submit": "Dəvət keçidi yarat",
@@ -335,6 +342,7 @@ export const people = defineMessages(
     "people.invite.error.invalid_email": "Bu e-poçt ünvanı düzgün deyil.",
     "people.invite.error.invalid_name": "Şəxsin adını daxil edin (ən çoxu 200 simvol).",
     "people.invite.error.inactive": "Bu şəxs deaktiv edilib və dəvət oluna bilməz.",
+    "people.invite.error.domain_not_allowed": "Bu e-poçt domeninə təşkilatınız üçün icazə verilmir.",
 
     "people.directory.title": "Əməkdaş kataloqu",
     "people.directory.search": "Ad və ya şöbə üzrə axtarış",
@@ -519,8 +527,11 @@ export const people = defineMessages(
     "people.error_file.reason_code": "Код причины",
     "people.error_file.reason": "Причина",
 
-    "people.invite.title": "Пригласить сотрудника",
-    "people.invite.intro": "Добавьте человека и получите одноразовую ссылку, чтобы отправить ему. Переход по ссылке выполняет вход; она работает один раз и истекает через 7 дней.",
+    "people.invite.title": "Добавить сотрудника или сбросить пароль",
+    "people.invite.intro": "Введите адрес почты и, при желании, начальный пароль: человек сможет войти сразу. Вы также получите одноразовую ссылку, чтобы скопировать или отправить; по ней человек выберет собственный пароль. Ссылка работает один раз и истекает через 7 дней. Для того, у кого уже есть доступ, это задаёт новый пароль и завершает его другие сеансы. Добавлять можно только адреса из разрешённых доменов вашей организации.",
+    "people.invite.password": "Начальный пароль (необязательно)",
+    "people.invite.password_hint": "Не менее 12 символов. Оставьте пустым, чтобы отправить только ссылку. Сообщите пароль лично или по телефону, а не в общем канале.",
+    "people.invite.password_set": "Пароль задан. Человек может войти с этим адресом и паролем:",
     "people.invite.name": "Полное имя",
     "people.invite.email": "Рабочий адрес электронной почты",
     "people.invite.submit": "Создать ссылку-приглашение",
@@ -530,6 +541,7 @@ export const people = defineMessages(
     "people.invite.error.invalid_email": "Этот адрес электронной почты недействителен.",
     "people.invite.error.invalid_name": "Введите имя (не более 200 символов).",
     "people.invite.error.inactive": "Этот сотрудник деактивирован, его нельзя пригласить.",
+    "people.invite.error.domain_not_allowed": "Этот почтовый домен не разрешён для вашей организации.",
 
     "people.directory.title": "Справочник сотрудников",
     "people.directory.search": "Поиск по имени или подразделению",

@@ -27,6 +27,13 @@ describe("migration lint (INV-1.1 / 1.2 / 1.6, T-INV8-04)", () => {
   it("rejects an unlisted global table", () => {
     expect(lintMigrationSql("CREATE TABLE secrets (\n  id int\n);")).not.toEqual([]);
   });
+  it("allows only the salted hash columns on identity", () => {
+    expect(lintMigrationSql("ALTER TABLE identity ADD COLUMN password_hash text;\nALTER TABLE identity ADD COLUMN password_set_at timestamptz;")).toEqual([]);
+  });
+  it("rejects any other password-like column, including by ALTER TABLE", () => {
+    expect(lintMigrationSql("ALTER TABLE identity ADD COLUMN password text;")).toEqual(expect.arrayContaining([expect.stringContaining("INV-8.4")]));
+    expect(lintMigrationSql("ALTER TABLE membership ADD COLUMN password_hash text;")).toEqual(expect.arrayContaining([expect.stringContaining("INV-8.4")]));
+  });
   it("rejects password columns", () => {
     expect(lintMigrationSql("CREATE TABLE organisation (\n  id uuid,\n  password text\n);")).toEqual(
       expect.arrayContaining([expect.stringContaining("INV-8.4")]),

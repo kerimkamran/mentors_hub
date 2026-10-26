@@ -40,7 +40,7 @@ npm run worker                       # background worker, in a second terminal
 - **Tenant isolation is the database's job** (INV-1): the app role cannot own tables or bypass RLS; the organisation context is set per transaction by `withOrg` only.
 - **Fail closed** (INV-8): a missing environment variable stops the server; a failing migration aborts the release.
 - **Audit log has no free text** (INV-3): `action` is a code, the table is append-only.
-- No passwords exist anywhere in the schema (INV-8.4).
+- Access is by invitation: an administrator creates an invite link and the person chooses their own password through it. Only a salted scrypt hash is stored, and no password is ever seeded or defaulted (INV-8.4 as amended).
 
 ## Next slice
 

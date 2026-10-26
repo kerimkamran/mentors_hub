@@ -1,7 +1,7 @@
 /**
  * Migration lint (INV-1.1, INV-1.2, INV-1.6, INV-8.4, T-INV8-04), applied to the SQL text.
  * Every CREATE TABLE must be on the global allowlist OR carry organisation_id, ENABLE + FORCE RLS.
- * No password/credential columns may exist anywhere.
+ * No password/credential columns may exist anywhere, except the allowlisted salted hash on identity (INV-8.4 as amended).
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -20,13 +20,19 @@ export const GLOBAL_TABLES = new Set([
   "auth_rate_limit",
 ]);
 
+/** The only password-like columns allowed: a salted hash and its timestamp. Never a plaintext password. */
+export const ALLOWED_PASSWORD_COLUMNS = new Set(["identity.password_hash", "identity.password_set_at"]);
+const PASSWORD_LIKE = /(password|passwd|pwd)/i;
+
 export function lintMigrationSql(sql: string, name = "migration"): string[] {
   const problems: string[] = [];
   const tables = [...sql.matchAll(/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?([a-z_][a-z0-9_]*)\s*\(([\s\S]*?)\n\);/gi)];
   for (const m of tables) {
     const table = m[1]!.toLowerCase();
     const body = m[2]!;
-    if (/\b(password|passwd|pwd)\b/i.test(body)) problems.push(`${name}: ${table} has a password-like column (INV-8.4)`);
+    for (const col of body.matchAll(/^\s*([a-z_][a-z0-9_]*)\s+[a-z]/gim))
+      if (PASSWORD_LIKE.test(col[1]!) && !ALLOWED_PASSWORD_COLUMNS.has(`${table}.${col[1]!.toLowerCase()}`))
+        problems.push(`${name}: ${table} has a password-like column ${col[1]} (INV-8.4)`);
     if (GLOBAL_TABLES.has(table)) continue;
     if (!/\borganisation_id\s+uuid\s+NOT NULL\s+REFERENCES\s+organisation\b/i.test(body))
       problems.push(`${name}: tenant table ${table} lacks organisation_id uuid NOT NULL REFERENCES organisation (INV-1.1)`);
@@ -35,6 +41,9 @@ export function lintMigrationSql(sql: string, name = "migration"): string[] {
     if (!new RegExp(`ALTER TABLE\\s+${table}\\s+FORCE ROW LEVEL SECURITY`, "i").test(sql))
       problems.push(`${name}: ${table} does not FORCE ROW LEVEL SECURITY (INV-1.2)`);
   }
+  for (const m of sql.matchAll(/ALTER TABLE\s+([a-z_][a-z0-9_]*)\s+ADD COLUMN\s+(?:IF NOT EXISTS\s+)?([a-z_][a-z0-9_]*)/gi))
+    if (PASSWORD_LIKE.test(m[2]!) && !ALLOWED_PASSWORD_COLUMNS.has(`${m[1]!.toLowerCase()}.${m[2]!.toLowerCase()}`))
+      problems.push(`${name}: ${m[1]} gains a password-like column ${m[2]} (INV-8.4)`);
   return problems;
 }
 

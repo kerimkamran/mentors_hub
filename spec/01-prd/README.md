@@ -91,7 +91,7 @@ Areas map to the Plan's 15 epics. Each requirement is deliberately one testable 
 |---|---|---|
 | FR-TEN-001 | Every tenant record carries `organisation_id`; the organisation always comes from the signed-in session, never from a URL, form or header. | D4, §5.1 |
 | FR-TEN-002 | A person has one global sign-in identity and one profile/HR record **per organisation**. Joining another organisation needs no schema change. | §6 |
-| FR-TEN-003 | Sign-in is by emailed magic link. No passwords exist anywhere in the system. | D6 |
+| FR-TEN-003 | Sign-in is by work email and password. Access is by invitation only: an administrator creates the person and sends a single-use invite link, and the person chooses their own password through it (the administrator never sees it). A forgotten password is reset by a new invite link. *(Amended 2026-10-23: was emailed magic link, no passwords.)* | D6 |
 | FR-TEN-004 | The sign-in email also carries a 6-digit code. The code works only in the browser that requested the sign-in. | §4 |
 | FR-TEN-005 | Only people who are **active in the HR import**, or whom a PM has explicitly invited, can sign in. | §4 |
 | FR-TEN-006 | Any email address — known, unknown, inactive — receives the same neutral on-screen response and the same response time class, so addresses cannot be probed. | §4 |

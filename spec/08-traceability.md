@@ -19,7 +19,7 @@ Chain: **BRD/Plan requirement → FR → story → acceptance criteria → scree
 |---|---|---|---|---|---|
 | FR-TEN-001 | Every tenant record carries `organisation_id`; the organisation always comes from the signed-in session, neve… | US-ADM-21 | 6 (AC-ADM-21.1…) | SCR-33 | — |
 | FR-TEN-002 | A person has one global sign-in identity and one profile/HR record per organisation. Joining another organisa… | US-ADM-21 | 6 (AC-ADM-21.1…) | SCR-33 | — |
-| FR-TEN-003 | Sign-in is by emailed magic link. No passwords exist anywhere in the system. | US-TEN-01 | 6 (AC-TEN-01.1…) | SCR-01 | — |
+| FR-TEN-003 | Sign-in is by work email and password; access by administrator invite link only (amended 2026-10-23). | US-TEN-01 | 6 (AC-TEN-01.1…) | SCR-01 | — |
 | FR-TEN-004 | The sign-in email also carries a 6-digit code. The code works only in the browser that requested the sign-in. | US-TEN-01 | 6 (AC-TEN-01.1…) | SCR-01 | — |
 | FR-TEN-005 | Only people who are active in the HR import, or whom a PM has explicitly invited, can sign in. | US-TEN-01 | 6 (AC-TEN-01.1…) | SCR-01 | — |
 | FR-TEN-006 | Any email address — known, unknown, inactive — receives the same neutral on-screen response and the same resp… | US-TEN-01 | 6 (AC-TEN-01.1…) | SCR-01 | — |

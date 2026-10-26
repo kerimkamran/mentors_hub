@@ -4,12 +4,13 @@ import { requireActor } from "@/lib/auth/http";
 import { deactivatePerson } from "@/domain/people/commands";
 import { can, NotFoundError } from "@/lib/permissions";
 import { env } from "@/lib/env";
-import { InviteError, invitePerson } from "@/lib/auth/invite";
+import { InviteError, PasswordError, invitePerson } from "@/lib/auth/invite";
 import { t } from "@/lib/i18n";
 
 export interface InviteState {
   link?: string;
   email?: string;
+  passwordSet?: boolean;
   error?: string;
 }
 
@@ -19,10 +20,12 @@ export async function invite(_prev: InviteState, formData: FormData): Promise<In
   if (!can(actor, "people.invite")) notFound();
   const email = String(formData.get("email") ?? "");
   try {
-    const r = await invitePerson(actor, { email, name: String(formData.get("name") ?? "") });
+    const password = String(formData.get("password") ?? "");
+    const r = await invitePerson(actor, { email, name: String(formData.get("name") ?? ""), password: password || undefined });
     const base = env().APP_BASE_URL.replace(/\/+$/, "");
-    return { link: `${base}/auth/invite?t=${r.token}`, email: email.trim().toLowerCase() };
+    return { link: `${base}/auth/invite?t=${r.token}`, email: email.trim().toLowerCase(), passwordSet: password.length > 0 };
   } catch (e) {
+    if (e instanceof PasswordError) return { error: t(actor.locale, `invite.error.${e.reason}`) };
     if (e instanceof InviteError) return { error: t(actor.locale, `people.invite.error.${e.reason}`) };
     if (e instanceof NotFoundError) notFound();
     throw e;

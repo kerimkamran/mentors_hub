@@ -50,7 +50,7 @@ erDiagram
 | Entity | Key fields | Notes |
 |---|---|---|
 | organisation (global) | id, name, slug, locales, default locale, time zone, `residency_signoff_at`, `ai_enabled`, email domains | Global table; allowlisted |
-| identity (global) | id, email (unique, lower-case), `totp_secret_enc`, locale | No password column (INV-8.4) |
+| identity (global) | id, email (unique, lower-case), `password_hash`, `password_set_at`, `totp_secret_enc`, locale | `password_hash` (salted scrypt) and `password_set_at`, set only through an invite link (INV-8.4 as amended) |
 | membership (org_id) | id, identity_id, status (`active` · `inactive` · `invited`), source (`import` · `invite`) | Sign-in allowed only if `active` (FR-TEN-005) |
 | person_profile (org_id) | membership_id, display name, department, job title, languages[], interests[], bio, visibility settings | Per-field visibility (§5 of permission matrix) |
 | hr_record (org_id) | membership_id, employee_id, hire_date, grade_id, manager_membership_id, status | **Grade bucket and reporting line**: engine inputs, never displayed |

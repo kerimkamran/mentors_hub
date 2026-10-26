@@ -1,21 +1,16 @@
 "use server";
 import { redirect } from "next/navigation";
-import { completeWithCode, requestSignIn } from "@/lib/auth/core";
 import { ensureBrowserId, setSessionCookie } from "@/lib/auth/http";
+import { signInWithPassword } from "@/lib/auth/password-signin";
 
-export async function requestLink(formData: FormData) {
+export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
   const browserId = await ensureBrowserId();
-  const result = await requestSignIn(email, browserId);
-  // The same page for every outcome except rate limiting, which depends only on the number of requests (AC-TEN-01.2).
-  redirect(result === "limited" ? "/signin/sent?limited=1" : "/signin/sent");
-}
-
-export async function submitCode(formData: FormData) {
-  const code = String(formData.get("code") ?? "").replace(/\s/g, "");
-  const browserId = await ensureBrowserId();
-  const done = await completeWithCode(code, browserId);
-  if (!done) redirect("/signin/sent?bad=1");
+  const done = await signInWithPassword(email, password, browserId);
+  // One message for every failure; rate limiting depends only on the number of attempts.
+  if (done === "limited") redirect("/signin?e=limited");
+  if (!done) redirect("/signin?e=bad");
   await setSessionCookie(done.sessionToken, done.maxAgeSeconds);
   redirect("/");
 }

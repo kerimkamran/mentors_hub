@@ -4,7 +4,8 @@ import { Alert, Button, Card, Field } from "@/components/ui";
 import { invite, type InviteState } from "./actions";
 
 export interface InviteLabels {
-  title: string; intro: string; name: string; email: string; submit: string;
+  title: string; intro: string; name: string; email: string; password: string; passwordHint: string; submit: string;
+  passwordSetTitle: string;
   linkTitle: string; linkHint: string; linkLabel: string;
 }
 
@@ -18,12 +19,14 @@ export function InviteForm({ labels }: { labels: InviteLabels }) {
       <form action={action} className="mt-3 flex flex-col gap-3">
         <Field label={labels.name} name="name" maxLength={200} autoComplete="off" />
         <Field label={labels.email} name="email" type="email" inputMode="email" autoComplete="off" />
+        <Field label={labels.password} name="password" type="text" required={false} maxLength={128} autoComplete="off" hint={labels.passwordHint} />
         <div><Button type="submit" disabled={pending}>{labels.submit}</Button></div>
       </form>
       {state.error && <div className="mt-3"><Alert kind="error">{state.error}</Alert></div>}
       {state.link && (
         <div className="mt-3">
           <Alert kind="success">
+            {state.passwordSet && <p className="font-medium">{labels.passwordSetTitle} {state.email}</p>}
             <p className="font-medium">{labels.linkTitle} {state.email}</p>
             <p className="mt-1">{labels.linkHint}</p>
             <label htmlFor="invite-link" className="mt-2 block font-medium">{labels.linkLabel}</label>

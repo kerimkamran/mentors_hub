@@ -203,7 +203,7 @@ Full property and scenario list: [matching-spec §8](01-prd/matching-spec.md).
 | INV-8.1 | A failed database migration aborts the deployment; the previous version keeps serving. | Pre-deploy migration step | S0 |
 | INV-8.2 | Application start-up refuses to run with missing or invalid configuration (database, mail, secrets, organisation seeding). | Boot validation with zod | S0 |
 | INV-8.3 | Real HR data cannot be imported until the data-residency sign-off is recorded in the system. | Import service checks a signed-off flag; flag settable only by org admin with TOTP and audit-logged | S2 |
-| INV-8.4 | No default or backdoor credentials exist; the bootstrap creates no password accounts. | Rewritten bootstrap | S1 |
+| INV-8.4 | No default or backdoor credentials exist; the bootstrap and seed create no passwords. The only stored credential is a salted scrypt hash on `identity` (`password_hash`, `password_set_at`), set by the person through a single-use administrator invite link; an administrator never sets or sees a password. *(Amended 2026-10-23: was "no passwords exist in the schema".)* | Rewritten bootstrap; migration lint allowlists exactly those two columns | S1 |
 | INV-8.5 | If the permission gate cannot decide (error), it denies. | Gate default | S1 |
 | INV-8.6 | If RLS context is missing, queries return nothing (INV-1.3). | RLS | S1 |
 
@@ -214,7 +214,7 @@ Full property and scenario list: [matching-spec §8](01-prd/matching-spec.md).
 | T-INV8-01 | Deploy test: deliberately failing migration aborts the release |
 | T-INV8-02 | Boot test: missing each required env var ⇒ process exits non-zero with a reference code, serves nothing |
 | T-INV8-03 | Import with `residency_signoff = false` and non-synthetic marker ⇒ rejected |
-| T-INV8-04 | Search the schema and seed for password columns/default accounts |
+| T-INV8-04 | Search the schema and seed: the only password-like columns are `identity.password_hash` and `identity.password_set_at`; no default or seeded accounts have a password |
 | T-INV8-05 | Gate throws ⇒ response is "not found"/deny, not allow |
 
 ---

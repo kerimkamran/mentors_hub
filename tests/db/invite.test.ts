@@ -8,6 +8,7 @@ import { actorFor, createOrg, createPerson, type TestOrg } from "./factory";
 let org: TestOrg;
 let other: TestOrg;
 const deps: AuthDeps = { enqueueSignInMail: async () => undefined, now: () => new Date(), minRequestMs: 0 };
+const PW = "correct horse battery staple";
 const uniq = () => Math.random().toString(36).slice(2, 10);
 
 async function owner<T>(fn: (c: Awaited<ReturnType<typeof connect>>) => Promise<T>): Promise<T> {
@@ -34,7 +35,7 @@ beforeAll(async () => {
 });
 
 describe("invite-only sign-in via administrator invite links", () => {
-  it("an administrator creates a person and a single-use link that signs them in and activates them", async () => {
+  it("an administrator creates a person and a single-use link; the person sets a password, is signed in and is activated", async () => {
     const a = await admin(org);
     const email = `new-${uniq()}@${org.domain}`;
     const { membershipId, token } = await invitePerson(a, { email: ` ${email.toUpperCase()} `, name: "New Person" });
@@ -43,7 +44,7 @@ describe("invite-only sign-in via administrator invite links", () => {
     const before = await ownerIn(org.id, (c) => c.query("SELECT status FROM membership WHERE id = $1", [membershipId]));
     expect(before.rows[0].status).toBe("invited");
 
-    const done = await redeemInvite(token, deps);
+    const done = await redeemInvite(token, PW, deps);
     expect(done).not.toBeNull();
     const actor = await resolveSession(done!.sessionToken);
     expect(actor?.membershipId).toBe(membershipId);
@@ -53,7 +54,7 @@ describe("invite-only sign-in via administrator invite links", () => {
 
     // single use: the same link cannot be used again
     expect(await peekInvite(token)).toBe("unusable");
-    expect(await redeemInvite(token, deps)).toBeNull();
+    expect(await redeemInvite(token, PW, deps)).toBeNull();
   });
 
   it("only administrators can invite (deny by default)", async () => {
@@ -70,7 +71,7 @@ describe("invite-only sign-in via administrator invite links", () => {
     const { token } = await invitePerson(a, { email: `peek-${uniq()}@${org.domain}`, name: "Peek" });
     expect(await peekInvite(token)).toBe("usable");
     expect(await peekInvite(token)).toBe("usable");
-    expect(await redeemInvite(token, deps)).not.toBeNull();
+    expect(await redeemInvite(token, PW, deps)).not.toBeNull();
   });
 
   it("an expired link is refused", async () => {
@@ -78,11 +79,11 @@ describe("invite-only sign-in via administrator invite links", () => {
     const { token } = await invitePerson(a, { email: `old-${uniq()}@${org.domain}`, name: "Old" });
     await owner((c) => c.query("UPDATE invite_link SET expires_at = now() - interval '1 minute' WHERE token_hash = $1", [sha256Hex(token)]));
     expect(await peekInvite(token)).toBe("unusable");
-    expect(await redeemInvite(token, deps)).toBeNull();
+    expect(await redeemInvite(token, PW, deps)).toBeNull();
   });
 
   it("an unknown token is refused", async () => {
-    expect(await redeemInvite("not-a-real-token", deps)).toBeNull();
+    expect(await redeemInvite("not-a-real-token", PW, deps)).toBeNull();
   });
 
   it("inviting again voids the earlier link", async () => {
@@ -91,8 +92,8 @@ describe("invite-only sign-in via administrator invite links", () => {
     const first = await invitePerson(a, { email, name: "Again" });
     const second = await invitePerson(a, { email, name: "Again" });
     expect(second.membershipId).toBe(first.membershipId);
-    expect(await redeemInvite(first.token, deps)).toBeNull();
-    expect(await redeemInvite(second.token, deps)).not.toBeNull();
+    expect(await redeemInvite(first.token, PW, deps)).toBeNull();
+    expect(await redeemInvite(second.token, PW, deps)).not.toBeNull();
   });
 
   it("a deactivated person cannot be invited, and a link issued before deactivation fails closed", async () => {
@@ -106,7 +107,7 @@ describe("invite-only sign-in via administrator invite links", () => {
       await c.query("SELECT set_config('app.org_id', $1, false)", [org.id]);
       await c.query("UPDATE membership SET status = 'inactive' WHERE id = $1", [membershipId]);
     });
-    expect(await redeemInvite(token, deps)).toBeNull();
+    expect(await redeemInvite(token, PW, deps)).toBeNull();
   });
 
   it("rejects an invalid email or name", async () => {

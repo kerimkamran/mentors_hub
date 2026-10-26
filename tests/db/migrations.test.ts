@@ -45,12 +45,12 @@ describe("INV-8 · migrations fail closed", () => {
     });
   });
 
-  it("T-INV8-04 · no password columns exist in the schema", async () => {
+  it("T-INV8-04 · the only password-like columns are the salted hash and its timestamp on identity", async () => {
     const c = await connect(OWNER_URL);
     const r = await c.query(
       "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public' AND column_name ~* '(password|passwd|pwd)'",
     );
-    expect(r.rows).toEqual([]);
+    expect(r.rows.map((x) => `${x.table_name}.${x.column_name}`).sort()).toEqual(["identity.password_hash", "identity.password_set_at"]);
     await c.end();
   });
 });

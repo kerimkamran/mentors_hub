@@ -5,6 +5,7 @@
  */
 import pg from "pg";
 import { randomToken, sha256Hex } from "../src/lib/crypto";
+import { hashPassword } from "../src/lib/auth/password";
 import { applyDerivedEnv } from "../src/lib/derive-env";
 
 applyDerivedEnv();
@@ -31,6 +32,18 @@ const PEOPLE: { email: string; name: string; dept: string; roles?: string[] }[] 
 const extraAdmin = process.env.DEMO_ADMIN_EMAIL?.trim().toLowerCase();
 if (extraAdmin && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(extraAdmin)) PEOPLE.push({ email: extraAdmin, name: "Demo Administrator", dept: "IT", roles: ["org_admin"] });
 
+// Optional: one ordinary (no role) user for staging. Initial passwords come ONLY from the environment (DEMO_ADMIN_PASSWORD,
+// DEMO_USER_PASSWORD), never from the repository. They are hashed here; a password is applied only when the person has none
+// yet, unless RESET_PASSWORDS=1 is set for one start. Nothing is seeded with a password when the variables are absent.
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const extraUser = process.env.DEMO_USER_EMAIL?.trim().toLowerCase();
+if (extraUser && EMAIL.test(extraUser) && extraUser !== extraAdmin) PEOPLE.push({ email: extraUser, name: "Demo User", dept: "HR" });
+const initialPassword = new Map<string, string>();
+if (extraAdmin && process.env.DEMO_ADMIN_PASSWORD) initialPassword.set(extraAdmin, process.env.DEMO_ADMIN_PASSWORD);
+if (extraUser && process.env.DEMO_USER_PASSWORD) initialPassword.set(extraUser, process.env.DEMO_USER_PASSWORD);
+const passwordHashes = new Map<string, string>();
+for (const [email, pw] of initialPassword) passwordHashes.set(email, await hashPassword(pw));
+
 const c = new pg.Client({ connectionString: url });
 await c.connect();
 try {
@@ -41,8 +54,9 @@ try {
   );
   const orgId = org.rows[0]!.id;
   await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ('demo-telecom.example', $1) ON CONFLICT DO NOTHING", [orgId]);
-  if (extraAdmin && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(extraAdmin))
-    await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [extraAdmin.split("@")[1], orgId]);
+  for (const e of [extraAdmin, extraUser])
+    if (e && EMAIL.test(e))
+      await c.query("INSERT INTO organisation_domain (domain, organisation_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [e.split("@")[1], orgId]);
   await c.query("SELECT set_config('app.org_id', $1, true)", [orgId]);
   let bootstrap: { identityId: string; membershipId: string } | null = null;
   for (const p of PEOPLE) {
@@ -60,6 +74,12 @@ try {
        ON CONFLICT (membership_id) DO UPDATE SET display_name = EXCLUDED.display_name`,
       [m.rows[0]!.id, orgId, p.name, p.dept],
     );
+    const hash = passwordHashes.get(p.email);
+    if (hash)
+      await c.query(
+        `UPDATE identity SET password_hash = $2, password_set_at = now() WHERE id = $1 AND ($3 OR password_hash IS NULL)`,
+        [i.rows[0]!.id, hash, process.env.RESET_PASSWORDS === "1"],
+      );
     if (p.email === extraAdmin) bootstrap = { identityId: i.rows[0]!.id, membershipId: m.rows[0]!.id };
     for (const role of p.roles ?? [])
       await c.query(
@@ -67,9 +87,13 @@ try {
         [orgId, m.rows[0]!.id, role],
       );
   }
-  // Invite-only access: the bootstrap administrator gets a single-use invite link, printed to the log (staging only).
-  // Each start voids the previous unused link and prints a fresh one, so access can always be recovered from the log.
-  if (bootstrap) {
+  // Invite-only access: the bootstrap administrator gets a single-use invite link, printed to the log (staging only),
+  // to choose their own password. Once a password exists no new link is printed on later starts, so the log is not a
+  // standing way in; set RESET_ADMIN_LINK=1 for one start to print a fresh link (for example after a forgotten password).
+  const hasPassword = bootstrap
+    ? (await c.query("SELECT 1 FROM identity WHERE id = $1 AND password_hash IS NOT NULL", [bootstrap.identityId])).rowCount! > 0
+    : false;
+  if (bootstrap && (!hasPassword || process.env.RESET_ADMIN_LINK === "1")) {
     const token = randomToken();
     await c.query("UPDATE invite_link SET used_at = now() WHERE membership_id = $1 AND used_at IS NULL", [bootstrap.membershipId]);
     await c.query(
@@ -81,6 +105,7 @@ try {
     console.log(`STAGING invite link for ${extraAdmin}: ${base}/auth/invite?t=${token}`);
   }
   await c.query("COMMIT");
+  if (passwordHashes.size) console.log(`initial passwords from the environment applied where none was set (${passwordHashes.size} account(s))`);
   console.log(`seeded Demo Telecom (${PEOPLE.length} synthetic people); sign in with admin@demo-telecom.example`);
 } catch (e) {
   await c.query("ROLLBACK");

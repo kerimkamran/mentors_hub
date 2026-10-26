@@ -45,7 +45,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       {can(actor, "people.invite") && (
         <InviteForm labels={{
           title: t(l, "people.invite.title"), intro: t(l, "people.invite.intro"), name: t(l, "people.invite.name"),
-          email: t(l, "people.invite.email"), submit: t(l, "people.invite.submit"), linkTitle: t(l, "people.invite.link_title"),
+          email: t(l, "people.invite.email"), password: t(l, "people.invite.password"), passwordHint: t(l, "people.invite.password_hint"), passwordSetTitle: t(l, "people.invite.password_set"), submit: t(l, "people.invite.submit"), linkTitle: t(l, "people.invite.link_title"),
           linkHint: t(l, "people.invite.link_hint"), linkLabel: t(l, "people.invite.link_label"),
         }} />
       )}
